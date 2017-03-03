@@ -1,0 +1,40 @@
+#!/usr//bin/env Rscript
+library(plumber)
+
+hip_json <- function(){
+  function(val, req, res, errorHandler){
+    tryCatch({
+      json <- jsonlite::toJSON(val,digits=NA)
+
+      res$setHeader("Content-Type", "application/json")
+      res$body <- json
+
+      return(res$toResponse())
+    }, error=function(e){
+      errorHandler(req, res, e)
+    })
+  }
+}
+
+file_json <- function(){
+  function(val, req, res, errorHandler){
+    tryCatch({
+      json <- jsonlite::toJSON(val,digits=NA)
+
+      res$setHeader("Content-Type", "multipart/form-data")
+      res$setHeader("Content-Disposition", "attachment; filename='mc_results.json'") 
+      res$body <- json
+
+      return(res$toResponse())
+    }, error=function(e){
+      errorHandler(req, res, e)
+    })
+  }
+}
+
+addSerializer("hip_json",hip_json)
+addSerializer("file_json",file_json)
+
+port <- 8000
+r <- plumb("TopModel.R")
+r$run(port=port)
